@@ -21,8 +21,6 @@ from binance.client import Client
 
 
 # Telegram bot initilizer.. will send message when the bot able to connect
-
-
 def init_telegram():
     global telegram_bot
     telegram_bot = telepot.Bot(config["telegram_token"])
@@ -33,6 +31,7 @@ def init_telegram():
         print("Unable to load telegram plugin.. please check you provide valid bot token in config.json")
         print(e)
     MessageLoop(telegram_bot, messageHandler).run_as_thread()
+
 # Telegram bot initilizer.. will send message when the bot able to connect
 def init_config():
     global config
@@ -42,4 +41,36 @@ def init_config():
     except Exception as e:
         print(
             "Error reading config.json..check if the file is valid json or if it's existed")
-      
+
+# to authenticate to Zignaly and refresh the token
+def getToken(force=False):
+    global zignaly_token
+    if zignaly_token == None or force:
+        res = requests.post("https://zignaly.com/api/fe/api.php?action=login", json={
+                            "email": config["username"], "password": config["password"], "projectId": "z01"}, headers=headers)
+        body = json.loads(res.text)
+        zignaly_token = body["token"]
+    return zignaly_token
+
+# Fetch all the open orders
+def fetch_open_order():
+    res = request_handler(
+        "https://zignaly.com/api/fe/api.php?action=getOpenPositions&token=","GET")
+    return json.loads(res)
+
+# Fetch all the closed orders
+def fetch_closed_order():
+    res = request_handler(
+        "https://zignaly.com/api/fe/api.php?action=getClosedPositions&token=","GET")
+    return json.loads(res)
+
+def fetch_status():
+    res = request_handler(
+        "https://zignaly.com/api/fe/api.php?action=getDashboardStats&token=","GET")
+    return json.loads(res)
+
+# Fetch balance of Zignaly profile
+def fetch_balance():
+    res = request_handler(
+        "https://zignaly.com/api/fe/api.php?action=getBalance&token=","GET")
+    return json.loads(res)
